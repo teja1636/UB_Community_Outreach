@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UB Community — UI Prototype</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.7.0/tabler-icons.min.css">
+<style>
+:root{
+  --blue:#005BBB; --blue-d:#003F8A; --light:#E8F0FB;
+  --page:#F7F8FA; --surface:#fff; --border:#EAECF0; --border2:#F2F4F7;
+  --tp:#111827; --ts:#667085; --tt:#98A2B3;
+  --food-bg:#FFF8ED; --food:#B54708; --ride-bg:#EFF8FF; --ride:#175CD3;
+  --sale-bg:#F9F5FF; --sale:#6941C6; --ok-bg:#ECFDF3; --ok:#027A48;
+  --warn-bg:#FFFAEB; --warn:#B54708; --danger:#e74c3c;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif}
+body{background:var(--page);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.phone{width:360px;height:720px;background:var(--surface);border:1px solid var(--border);border-radius:36px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.12)}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .2s}
+.scr.on{opacity:1;pointer-events:auto}
+.scroll{flex:1;overflow-y:auto}
+.scroll::-webkit-scrollbar{width:0}
+.tb{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border2);flex-shrink:0}
+.bn{display:flex;border-top:1px solid var(--border2);flex-shrink:0;background:var(--surface)}
+.nb{flex:1;padding:9px 0 7px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--tt);border:none;background:none;cursor:pointer}
+.nb.on{color:var(--blue)}
+.nb i{font-size:22px}
+.av{width:34px;height:34px;border-radius:50%;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.t1{font-size:13px;font-weight:500;color:var(--tp)}
+.t2{font-size:12px;color:var(--ts)}
+.t3{font-size:11px;color:var(--tt)}
+.sec{font-size:12px;font-weight:500;color:var(--ts);padding:14px 16px 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px;margin:0 14px 11px}
+.row{display:flex;align-items:center}.bt{justify-content:space-between}
+.g6{gap:6px}.g8{gap:8px}.g10{gap:10px}
+.btn{padding:8px 14px;border-radius:9px;font-size:13px;border:1px solid var(--border);background:var(--surface);color:var(--tp);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.bp{background:var(--blue);color:#fff;border-color:var(--blue)}
+.bp:active{background:var(--blue-d)}
+.chip{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--border2);color:var(--ts);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.cf{background:var(--food-bg);color:var(--food)}.cr{background:var(--ride-bg);color:var(--ride)}.cs{background:var(--sale-bg);color:var(--sale)}.ce{background:var(--ok-bg);color:var(--ok)}
+.media{height:130px;background:var(--border2);border-radius:9px;display:flex;align-items:center;justify-content:center;margin:9px 0}
+.media i{font-size:30px;color:var(--tt)}
+.back{background:none;border:none;cursor:pointer;color:var(--ts);display:flex}
+.filt{display:flex;gap:6px;padding:0 14px 11px;overflow-x:auto}
+.filt::-webkit-scrollbar{height:0}
+.fc{padding:5px 12px;border-radius:999px;font-size:12px;white-space:nowrap;cursor:pointer;background:var(--border2);color:var(--ts);border:none}
+.fc.on{background:var(--blue);color:#fff}
+.inp{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;outline:none}
+.inp:focus{border-color:var(--blue)}
+.dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1}
+.maparea{height:210px;background:var(--border2);position:relative;overflow:hidden}
+.gl{position:absolute;background:var(--border);opacity:.6}
+.pin{position:absolute;width:32px;height:32px;border-radius:50% 50% 50% 4px;background:var(--surface);border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;transform:rotate(45deg);cursor:pointer}
+.pin span{transform:rotate(-45deg)}
+.pin.sel{border-color:#EF9F27;background:var(--warn-bg)}
+.li{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border2);cursor:pointer;font-size:13px}
+.tagline{font-size:12px;color:var(--ts);text-align:center;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- WELCOME (phone OTP) -->
+  <div class="scr on" id="welcome">
+    <div class="scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 26px;gap:18px">
+      <div style="width:70px;height:70px;border-radius:18px;background:var(--blue);display:flex;align-items:center;justify-content:center"><span style="font-size:28px;font-weight:600;color:#fff">UB</span></div>
+      <div style="text-align:center"><div style="font-size:19px;font-weight:600;margin-bottom:5px">UB community</div><div class="t2">Rides · food · sales · campus life</div></div>
+      <div class="tagline" style="background:var(--light);color:var(--blue);padding:11px 14px;border-radius:11px">We're not storing your identity.<br>We're storing your experience.</div>
+      <div style="width:100%">
+        <div class="t3" style="margin-bottom:6px">Phone number</div>
+        <input class="inp" placeholder="(716) 555-0148" style="margin-bottom:10px"/>
+        <button class="btn bp" style="width:100%;padding:12px" onclick="go('otp')"><i class="ti ti-device-mobile"></i> Send code</button>
+      </div>
+      <div class="t3" style="text-align:center">One tap. No name, no email required.<br>Your number is hashed — we never store or show it.</div>
+    </div>
+  </div>
+
+  <!-- OTP -->
+  <div class="scr" id="otp">
+    <div class="tb"><button class="back" onclick="go('welcome')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Enter code</span><div style="width:20px"></div></div>
+    <div class="scroll" style="padding:22px 16px;display:flex;flex-direction:column;gap:16px">
+      <div style="text-align:center"><i class="ti ti-message-2-check" style="font-size:36px;color:var(--blue)"></i><div class="t1" style="margin:10px 0 4px">Check your texts</div><div class="t2">6-digit code sent to your phone</div></div>
+      <div style="display:flex;gap:7px;justify-content:center">
+        <input class="inp" style="width:42px;text-align:center;font-size:20px;padding:12px 0" value="4"/>
+        <input class="inp" style="width:42px;text-align:center;font-size:20px;padding:12px 0" value="8"/>
+        <input class="inp" style="width:42px;text-align:center;font-size:20px;padding:12px 0" value="3"/>
+        <input class="inp" style="width:42px;text-align:center;font-size:20px;padding:12px 0"/>
+        <input class="inp" style="width:42px;text-align:center;font-size:20px;padding:12px 0"/>
+        <input class="inp" style="width:42px;text-align:center;font-size:20px;padding:12px 0"/>
+      </div>
+      <button class="btn bp" style="width:100%;padding:12px" onclick="go('location')">Verify</button>
+      <div class="t3" style="text-align:center">Resend in 45s</div>
+    </div>
+  </div>
+
+  <!-- LOCATION -->
+  <div class="scr" id="location">
+    <div class="tb"><div style="width:20px"></div><span class="t1">Your campus zone</span><div style="width:20px"></div></div>
+    <div class="scroll" style="padding:20px 16px;display:flex;flex-direction:column;gap:11px">
+      <div class="t2" style="text-align:center">Helps show nearby food, rides and sales. We store the zone only — never your exact address.</div>
+      <button class="btn bp" style="width:100%;padding:11px" onclick="go('identity')"><i class="ti ti-current-location"></i> Use my location</button>
+      <div class="t3" style="text-align:center">or pick manually</div>
+      <div onclick="go('identity')" style="padding:14px;border:2px solid var(--blue);border-radius:12px;cursor:pointer;display:flex;gap:11px;align-items:center"><i class="ti ti-building" style="font-size:20px;color:var(--blue)"></i><div><div class="t1">North campus</div><div class="t3">Main academic area</div></div></div>
+      <div onclick="go('identity')" style="padding:14px;border:1px solid var(--border);border-radius:12px;cursor:pointer;display:flex;gap:11px;align-items:center"><i class="ti ti-home" style="font-size:20px;color:var(--ts)"></i><div><div class="t1">South campus</div><div class="t3">Medical, residential</div></div></div>
+      <div onclick="go('identity')" style="padding:14px;border:1px solid var(--border);border-radius:12px;cursor:pointer;display:flex;gap:11px;align-items:center"><i class="ti ti-map-pin" style="font-size:20px;color:var(--ts)"></i><div><div class="t1">Off campus</div><div class="t3">Amherst, Buffalo</div></div></div>
+    </div>
+  </div>
+
+  <!-- IDENTITY -->
+  <div class="scr" id="identity">
+    <div class="tb"><div style="width:20px"></div><span class="t1">Choose your identity</span><div style="width:20px"></div></div>
+    <div class="scroll" style="padding:20px 16px">
+      <div style="border:2px solid var(--blue);border-radius:12px;padding:14px;margin-bottom:11px">
+        <div class="t1" style="margin-bottom:4px">Stay anonymous</div>
+        <div class="t3" style="margin-bottom:12px">Pick an avatar — you'll appear as Buffalo #4821</div>
+        <div style="display:flex;gap:9px;justify-content:center;margin-bottom:13px">
+          <div style="font-size:28px;cursor:pointer">🦉</div>
+          <div style="font-size:28px;cursor:pointer;border:2px solid var(--blue);border-radius:50%;padding:2px">🐃</div>
+          <div style="font-size:28px;cursor:pointer">🦊</div>
+          <div style="font-size:28px;cursor:pointer">🐺</div>
+          <div style="font-size:28px;cursor:pointer">🦅</div>
+        </div>
+        <button class="btn bp" style="width:100%;padding:10px" onclick="go('priorities')">Continue as 🐃 Buffalo #4821</button>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:14px">
+        <div class="t1" style="margin-bottom:4px">Add a name & photo</div>
+        <div class="t3" style="margin-bottom:12px">Optional · build more trust · reversible anytime</div>
+        <button class="btn" style="width:100%;padding:10px" onclick="go('priorities')"><i class="ti ti-camera"></i> Add name & photo</button>
+      </div>
+      <div class="t3" style="text-align:center;margin-top:12px">You can verify your UB email later for a trusted badge</div>
+    </div>
+  </div>
+
+  <!-- PRIORITIES -->
+  <div class="scr" id="priorities">
+    <div class="tb"><div style="width:20px"></div><span class="t1">What brings you here?</span><button class="back" onclick="go('feed')"><span class="t3">Skip</span></button></div>
+    <div class="scroll" style="padding:20px 16px;display:flex;flex-direction:column;gap:10px">
+      <div class="t2" style="text-align:center;margin-bottom:6px">We'll tailor your feed. You can do everything regardless.</div>
+      <div onclick="go('feed')" style="padding:15px;border:1px solid var(--border);border-radius:12px;cursor:pointer;display:flex;gap:12px;align-items:center"><i class="ti ti-car" style="font-size:22px;color:var(--ride)"></i><div><div class="t1">Find or offer rides</div><div class="t3">Get around campus & town</div></div></div>
+      <div onclick="go('feed')" style="padding:15px;border:1px solid var(--border);border-radius:12px;cursor:pointer;display:flex;gap:12px;align-items:center"><i class="ti ti-tools-kitchen-2" style="font-size:22px;color:var(--food)"></i><div><div class="t1">Sell or buy food</div><div class="t3">Homemade meals on campus</div></div></div>
+      <div onclick="go('feed')" style="padding:15px;border:1px solid var(--border);border-radius:12px;cursor:pointer;display:flex;gap:12px;align-items:center"><i class="ti ti-eye" style="font-size:22px;color:var(--ts)"></i><div><div class="t1">Just browsing</div><div class="t3">Not sure yet, show me around</div></div></div>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div class="scr" id="feed">
+    <div class="tb">
+      <div class="row g6"><div style="width:28px;height:28px;border-radius:7px;background:var(--blue);display:flex;align-items:center;justify-content:center"><span style="font-size:12px;font-weight:600;color:#fff">UB</span></div><span class="t1">UB community</span></div>
+      <div class="row g10"><i class="ti ti-bell" style="font-size:20px;color:var(--ts)"></i><i class="ti ti-message-circle" style="font-size:20px;color:var(--ts);cursor:pointer" onclick="go('messages')"></i><div class="av" style="width:30px;height:30px;cursor:pointer" onclick="go('profile')">🐃</div></div>
+    </div>
+    <div style="padding:9px 14px 0">
+      <div class="row g6" style="background:var(--border2);border-radius:10px;padding:9px 12px;margin-bottom:9px;cursor:pointer" onclick="go('compose')"><i class="ti ti-pencil" style="font-size:15px;color:var(--tt)"></i><span class="t2" style="flex:1">What's happening on campus?</span><span class="btn bp" style="padding:4px 11px;font-size:12px">Post</span></div>
+    </div>
+    <div class="filt"><button class="fc on">All</button><button class="fc">Food</button><button class="fc">Rides</button><button class="fc">Sales</button><button class="fc">Events</button></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="row bt g6" style="margin-bottom:8px"><div class="row g6"><div class="av">👩</div><div><div class="t1">spicy_kitchen_22</div><div style="font-size:11px;color:var(--ok)"><i class="ti ti-shield-check"></i> UB verified · 3m</div></div></div><span class="chip cf"><i class="ti ti-tools-kitchen-2"></i> Food</span></div>
+        <div class="media"><i class="ti ti-player-play"></i></div>
+        <div class="t1">Homemade chicken biryani · 8 left</div>
+        <div class="t3" style="margin:3px 0 9px">Ready 6–9pm · Ellicott complex</div>
+        <div class="row bt"><span style="font-size:15px;font-weight:600">$7.00</span><div class="row g6"><span class="chip">Pickup</span><span class="chip">Delivery</span><button class="btn bp" style="font-size:12px;padding:6px 11px" onclick="go('foodorder')">Order</button></div></div>
+      </div>
+      <div class="card">
+        <div class="row bt g6" style="margin-bottom:8px"><div class="row g6"><div class="av">🧑</div><div><div class="t1">northwind_rides</div><div style="font-size:11px;color:var(--ok)"><i class="ti ti-shield-check"></i> UB verified · 8m</div></div></div><span class="chip cr"><i class="ti ti-car"></i> Ride</span></div>
+        <div class="t1" style="margin-bottom:5px">North campus → Buffalo airport</div>
+        <div class="row g6" style="flex-wrap:wrap;margin-bottom:9px"><span class="chip"><i class="ti ti-clock"></i> Sun 6am</span><span class="chip"><i class="ti ti-users"></i> 2 seats</span><span class="chip"><i class="ti ti-star"></i> 4.9</span></div>
+        <div class="row bt"><span style="font-size:15px;font-weight:600">$12.00 <span class="t3" style="font-weight:400">/seat</span></span><button class="btn bp" style="font-size:12px;padding:6px 11px" onclick="go('rides')">Book seat</button></div>
+      </div>
+      <div class="card">
+        <div class="row bt g6" style="margin-bottom:8px"><div class="row g6"><div class="av">🐺</div><div><div class="t1">Wolf #2219</div><div style="font-size:11px;color:var(--tt)"><i class="ti ti-eye-off"></i> anonymous · 15m</div></div></div><span class="chip ce"><i class="ti ti-confetti"></i> Event</span></div>
+        <div class="media"><i class="ti ti-player-play"></i></div>
+        <div class="t1">Snow day — North Campus buried right now</div>
+        <div class="row g10" style="margin-top:10px"><span class="t2"><i class="ti ti-heart" style="vertical-align:-2px"></i> 84</span><span class="t2"><i class="ti ti-message-circle" style="vertical-align:-2px"></i> 12</span><span class="t2"><i class="ti ti-coins" style="vertical-align:-2px"></i> Tip</span></div>
+      </div>
+      <div style="height:12px"></div>
+    </div>
+    <div class="bn">
+      <button class="nb on"><i class="ti ti-home"></i>Feed</button>
+      <button class="nb" onclick="go('food')"><i class="ti ti-tools-kitchen-2"></i>Food</button>
+      <button class="nb" onclick="go('rides')"><i class="ti ti-car"></i>Rides</button>
+      <button class="nb" onclick="go('sales')"><i class="ti ti-tag"></i>Sales</button>
+      <button class="nb" onclick="go('wallet')"><i class="ti ti-wallet"></i>Wallet</button>
+    </div>
+  </div>
+
+  <!-- COMPOSE -->
+  <div class="scr" id="compose">
+    <div class="tb"><span class="t1">What are you posting?</span><button class="back" onclick="go('feed')"><i class="ti ti-x" style="font-size:20px"></i></button></div>
+    <div class="scroll" style="padding:16px;display:flex;flex-direction:column;gap:9px">
+      <div onclick="go('food')" class="row g10" style="padding:13px;border:1px solid var(--border);border-radius:12px;cursor:pointer"><div class="av" style="border-radius:10px"><i class="ti ti-tools-kitchen-2" style="font-size:18px;color:var(--ts)"></i></div><div><div class="t1">Food</div><div class="t3">Sell what you cooked</div></div></div>
+      <div onclick="go('rides')" class="row g10" style="padding:13px;border:1px solid var(--border);border-radius:12px;cursor:pointer"><div class="av" style="border-radius:10px"><i class="ti ti-car" style="font-size:18px;color:var(--ts)"></i></div><div><div class="t1">Ride</div><div class="t3">Offer or request a ride</div></div></div>
+      <div onclick="go('sales')" class="row g10" style="padding:13px;border:1px solid var(--border);border-radius:12px;cursor:pointer"><div class="av" style="border-radius:10px"><i class="ti ti-tag" style="font-size:18px;color:var(--ts)"></i></div><div><div class="t1">Sale</div><div class="t3">Sell an item or list a room</div></div></div>
+      <div onclick="go('feed')" class="row g10" style="padding:13px;border:1px solid var(--border);border-radius:12px;cursor:pointer"><div class="av" style="border-radius:10px"><i class="ti ti-confetti" style="font-size:18px;color:var(--ts)"></i></div><div><div class="t1">Event</div><div class="t3">Share what's happening</div></div></div>
+      <div onclick="go('feed')" class="row g10" style="padding:13px;border:1px solid var(--border);border-radius:12px;cursor:pointer"><div class="av" style="border-radius:10px"><i class="ti ti-message-2" style="font-size:18px;color:var(--ts)"></i></div><div><div class="t1">Community</div><div class="t3">Share anything</div></div></div>
+    </div>
+  </div>
+
+  <!-- FOOD -->
+  <div class="scr" id="food">
+    <div class="tb"><button class="back" onclick="go('feed')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Food</span><button class="btn bp" style="font-size:12px;padding:6px 10px"><i class="ti ti-plus"></i> List</button></div>
+    <div class="filt" style="padding-top:11px"><button class="fc on">All</button><button class="fc">Pickup</button><button class="fc">Delivery</button><button class="fc">Halal</button><button class="fc">Vegan</button></div>
+    <div class="scroll">
+      <div class="card" style="cursor:pointer" onclick="go('foodorder')">
+        <div class="row bt g6" style="margin-bottom:8px"><div class="row g6"><div class="av">👩</div><div><div class="t1">spicy_kitchen_22</div><div class="t3"><i class="ti ti-star-filled" style="color:#EF9F27"></i> 4.8 · 34 orders</div></div></div><span class="chip ce">8 left</span></div>
+        <div style="height:110px;background:var(--border2);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:9px"><i class="ti ti-bowl-spoon" style="font-size:28px;color:var(--tt)"></i></div>
+        <div class="t1">Chicken biryani</div>
+        <div class="t3" style="margin:3px 0 9px">Ready 6–9pm · Ellicott</div>
+        <div class="row bt"><span style="font-size:14px;font-weight:600">$7.00</span><div class="row g6"><span class="chip">Pickup</span><span class="chip">Delivery</span></div></div>
+      </div>
+      <div class="card">
+        <div class="row bt g6" style="margin-bottom:8px"><div class="row g6"><div class="av">🧑</div><div><div class="t1">desi_bites_ub</div><div class="t3"><i class="ti ti-star-filled" style="color:#EF9F27"></i> 4.9 · 61 orders</div></div></div><span class="chip ce">Pre-order</span></div>
+        <div style="height:110px;background:var(--border2);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:9px"><i class="ti ti-soup" style="font-size:28px;color:var(--tt)"></i></div>
+        <div class="t1">Dal makhani + roti</div>
+        <div class="t3" style="margin:3px 0 9px">Ready 7–8pm · Goodyear</div>
+        <div class="row bt"><span style="font-size:14px;font-weight:600">$5.00</span><span class="chip">Pickup only</span></div>
+      </div>
+      <div style="height:12px"></div>
+    </div>
+    <div class="bn">
+      <button class="nb" onclick="go('feed')"><i class="ti ti-home"></i>Feed</button>
+      <button class="nb on"><i class="ti ti-tools-kitchen-2"></i>Food</button>
+      <button class="nb" onclick="go('rides')"><i class="ti ti-car"></i>Rides</button>
+      <button class="nb" onclick="go('sales')"><i class="ti ti-tag"></i>Sales</button>
+      <button class="nb" onclick="go('wallet')"><i class="ti ti-wallet"></i>Wallet</button>
+    </div>
+  </div>
+
+  <!-- FOOD ORDER -->
+  <div class="scr" id="foodorder">
+    <div class="tb"><button class="back" onclick="go('food')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Order food</span><div style="width:20px"></div></div>
+    <div class="scroll" style="padding:14px">
+      <div style="height:140px;background:var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px"><i class="ti ti-bowl-spoon" style="font-size:42px;color:var(--tt)"></i></div>
+      <div class="t1" style="font-size:15px">Chicken biryani</div>
+      <div class="t2" style="margin:3px 0 14px">by spicy_kitchen_22 · <i class="ti ti-star-filled" style="color:#EF9F27"></i> 4.8</div>
+      <div class="t2" style="font-weight:500;margin-bottom:7px">Fulfillment</div>
+      <div style="display:flex;gap:9px;margin-bottom:14px">
+        <div id="fp" onclick="selF('p')" style="flex:1;padding:11px;border:2px solid var(--blue);border-radius:11px;cursor:pointer;text-align:center"><i class="ti ti-walk" style="font-size:20px;color:var(--blue)"></i><div class="t1" style="margin-top:4px">Pickup</div><div class="t3">$7.00</div></div>
+        <div id="fd" onclick="selF('d')" style="flex:1;padding:11px;border:1px solid var(--border);border-radius:11px;cursor:pointer;text-align:center"><i class="ti ti-bike" style="font-size:20px;color:var(--ts)"></i><div class="t1" style="margin-top:4px">Delivery</div><div class="t3">$7 + $2</div></div>
+      </div>
+      <div style="background:var(--border2);border-radius:12px;padding:13px;margin-bottom:12px">
+        <div class="row bt" style="margin-bottom:6px"><span class="t2">Food</span><span class="t1">$7.00</span></div>
+        <div class="row bt" id="delrow" style="margin-bottom:6px"><span class="t2">Delivery</span><span class="t1">$2.00</span></div>
+        <div style="border-top:1px solid var(--border);margin:8px 0"></div>
+        <div class="row bt"><span class="t1">Total</span><span id="ototal" style="font-size:16px;font-weight:600;color:var(--blue)">$9.00</span></div>
+      </div>
+      <div class="t3" style="text-align:center;margin-bottom:12px"><i class="ti ti-info-circle"></i> Pay seller + rider directly via Venmo. Platform just tracks it.</div>
+      <button class="btn bp" style="width:100%;padding:13px" onclick="go('track')">Place order</button>
+    </div>
+  </div>
+
+  <!-- TRACK -->
+  <div class="scr" id="track">
+    <div class="tb"><button class="back" onclick="go('feed')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Order #4821</span><i class="ti ti-message-circle" style="font-size:20px;color:var(--ts);cursor:pointer" onclick="go('chat')"></i></div>
+    <div class="scroll" style="padding:14px">
+      <div class="row g10" style="padding:11px;background:var(--border2);border-radius:11px;margin-bottom:16px"><div style="width:42px;height:42px;border-radius:9px;background:var(--surface);display:flex;align-items:center;justify-content:center"><i class="ti ti-bowl-spoon" style="font-size:22px;color:var(--tt)"></i></div><div style="flex:1"><div class="t1">Chicken biryani · delivery</div><div class="t3">spicy_kitchen_22</div></div><div class="t1">$9.00</div></div>
+      <div style="position:relative;padding-left:4px">
+        <div style="position:absolute;left:13px;top:9px;bottom:34px;width:2px;background:var(--border)"></div>
+        <div class="row g10" style="padding-bottom:16px"><div class="dot" style="background:var(--blue)"><i class="ti ti-check" style="font-size:11px;color:#fff"></i></div><div><div class="t1">Order placed</div><div class="t3">6:02pm</div></div></div>
+        <div class="row g10" style="padding-bottom:16px"><div class="dot" style="background:var(--blue)"><i class="ti ti-check" style="font-size:11px;color:#fff"></i></div><div><div class="t1">Seller cooking</div><div class="t3">Ready ~6:25pm</div></div></div>
+        <div class="row g10" style="padding-bottom:16px"><div class="dot" style="background:var(--blue)"><i class="ti ti-check" style="font-size:11px;color:#fff"></i></div><div><div class="t1">Rider claimed</div><div class="t3">🐺 Wolf #2219 · 4.8</div></div></div>
+        <div class="row g10" style="padding-bottom:16px"><div class="dot" style="background:#EF9F27"><i class="ti ti-arrows-exchange" style="font-size:11px;color:#fff"></i></div><div><div class="t1" style="color:var(--food)">Handoff confirmed</div><div class="t3">Both tapped · custody → rider</div></div></div>
+        <div class="row g10" style="padding-bottom:16px"><div class="dot" style="background:var(--surface);border:2px solid var(--blue)"><div style="width:6px;height:6px;border-radius:50%;background:var(--blue)"></div></div><div><div class="t1" style="color:var(--blue)">In transit</div><div class="t3">Rider 4 min away</div></div></div>
+        <div class="row g10"><div class="dot" style="background:var(--border2);border:1px solid var(--border)"></div><div><div class="t2">Delivered · then both mark paid</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIDES -->
+  <div class="scr" id="rides">
+    <div class="tb"><button class="back" onclick="go('feed')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Rides</span><button class="btn bp" style="font-size:12px;padding:6px 10px"><i class="ti ti-steering-wheel"></i> Drive</button></div>
+    <div class="scroll">
+      <div style="margin:11px 14px;background:var(--border2);border-radius:12px;padding:12px">
+        <div class="t1" style="margin-bottom:8px">Request a ride now</div>
+        <div style="background:var(--surface);border-radius:8px;padding:9px;margin-bottom:6px;display:flex;align-items:center;gap:8px"><div style="width:7px;height:7px;border-radius:50%;background:var(--blue)"></div><span class="t3">Pickup location…</span></div>
+        <div style="background:var(--surface);border-radius:8px;padding:9px;margin-bottom:10px;display:flex;align-items:center;gap:8px"><div style="width:7px;height:7px;border-radius:50%;background:var(--danger)"></div><span class="t3">Dropoff location…</span></div>
+        <button class="btn bp" style="width:100%;padding:9px" onclick="go('ridemap')"><i class="ti ti-map-2"></i> Find drivers nearby</button>
+      </div>
+      <div class="t2" style="font-weight:500;padding:0 14px 7px">Scheduled rides</div>
+      <div class="card" style="margin:0 14px 9px"><div class="row bt g6" style="margin-bottom:7px"><div class="row g6"><div class="av">🧑</div><div><div class="t1">northwind_rides</div><div class="t3"><i class="ti ti-star-filled" style="color:#EF9F27"></i> 4.9 · 87 rides</div></div></div><span class="chip ce">2 seats</span></div><div class="t1">North campus → Airport</div><div class="t3" style="margin:3px 0 8px">Sun 6:00am · ~35 min</div><div class="row bt"><span style="font-size:14px;font-weight:600">$12.00/seat</span><button class="btn bp" style="font-size:12px;padding:6px 11px">Book</button></div></div>
+      <div style="height:12px"></div>
+    </div>
+    <div class="bn">
+      <button class="nb" onclick="go('feed')"><i class="ti ti-home"></i>Feed</button>
+      <button class="nb" onclick="go('food')"><i class="ti ti-tools-kitchen-2"></i>Food</button>
+      <button class="nb on"><i class="ti ti-car"></i>Rides</button>
+      <button class="nb" onclick="go('sales')"><i class="ti ti-tag"></i>Sales</button>
+      <button class="nb" onclick="go('wallet')"><i class="ti ti-wallet"></i>Wallet</button>
+    </div>
+  </div>
+
+  <!-- RIDE MAP -->
+  <div class="scr" id="ridemap">
+    <div class="tb"><button class="back" onclick="go('rides')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Pick a driver</span><div style="width:20px"></div></div>
+    <div class="scroll">
+      <div class="maparea">
+        <div class="gl" style="left:0;right:0;top:60px;height:1px"></div>
+        <div class="gl" style="left:0;right:0;top:130px;height:1px"></div>
+        <div class="gl" style="top:0;bottom:0;left:110px;width:1px"></div>
+        <div class="gl" style="top:0;bottom:0;left:230px;width:1px"></div>
+        <div class="pin" style="top:35px;left:65px"><span>🧑</span></div>
+        <div class="pin sel" style="top:95px;left:175px"><span>👩</span></div>
+        <div class="pin" style="top:140px;left:85px"><span>🧑</span></div>
+        <div class="pin" style="top:65px;left:265px"><span>👤</span></div>
+        <div style="position:absolute;bottom:9px;left:9px;background:var(--surface);border-radius:7px;padding:4px 9px;font-size:11px;color:var(--ts)"><i class="ti ti-circle-filled" style="font-size:8px;color:var(--ok)"></i> 4 drivers nearby</div>
+      </div>
+      <div style="padding:14px">
+        <div class="row g10" style="margin-bottom:11px"><div class="av" style="width:40px;height:40px;font-size:19px">👩</div><div style="flex:1"><div class="t1">campus_cab_ub</div><div class="t3"><i class="ti ti-star-filled" style="color:#EF9F27"></i> 4.7 · 203 rides · 2 min away</div></div><div class="t1">~$12</div></div>
+        <button class="btn bp" style="width:100%;padding:11px" onclick="go('chat')">Request this driver</button>
+        <div class="t3" style="text-align:center;margin-top:7px">Only this driver is notified · 90s to accept</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALES -->
+  <div class="scr" id="sales">
+    <div class="tb"><button class="back" onclick="go('feed')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Sales</span><button class="btn bp" style="font-size:12px;padding:6px 10px"><i class="ti ti-plus"></i> List</button></div>
+    <div class="filt" style="padding-top:11px"><button class="fc">Furniture</button><button class="fc">Electronics</button><button class="fc">Books</button><button class="fc on">Accommodations</button></div>
+    <div class="scroll" style="padding:0 14px">
+      <div style="border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:11px">
+        <div class="row bt" style="margin-bottom:8px"><div class="row g8"><div class="av">🦉</div><div><div class="t1">Night Owl #318</div><div class="t3">anonymous · 1h</div></div></div><span class="chip cs">Sublease</span></div>
+        <div style="height:90px;background:var(--border2);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:9px"><i class="ti ti-building-community" style="font-size:28px;color:var(--tt)"></i></div>
+        <div class="t1">1BR sublease · Ellicott</div>
+        <div class="t3" style="margin:3px 0 9px">May–Aug · furnished</div>
+        <div class="row bt"><div class="t1" style="font-size:15px">$650<span class="t3" style="font-weight:400">/mo</span></div><button class="btn" style="font-size:12px;padding:6px 11px" onclick="go('chat')"><i class="ti ti-message-circle"></i> Message</button></div>
+        <div style="margin-top:9px;padding:7px 9px;background:var(--warn-bg);border-radius:7px;font-size:11px;color:var(--warn)"><i class="ti ti-info-circle"></i> Info only · arrange lease directly</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:13px"><div class="row bt" style="margin-bottom:7px"><div class="row g8"><div class="av">🦊</div><div><div class="t1">Fox #771</div><div class="t3">anonymous · 3h</div></div></div><span class="chip cr">Roommate</span></div><div class="t1">Roommate wanted · South campus</div><div class="t3">$500/mo share · Fall</div></div>
+      <div style="height:12px"></div>
+    </div>
+    <div class="bn">
+      <button class="nb" onclick="go('feed')"><i class="ti ti-home"></i>Feed</button>
+      <button class="nb" onclick="go('food')"><i class="ti ti-tools-kitchen-2"></i>Food</button>
+      <button class="nb" onclick="go('rides')"><i class="ti ti-car"></i>Rides</button>
+      <button class="nb on"><i class="ti ti-tag"></i>Sales</button>
+      <button class="nb" onclick="go('wallet')"><i class="ti ti-wallet"></i>Wallet</button>
+    </div>
+  </div>
+
+  <!-- WALLET -->
+  <div class="scr" id="wallet">
+    <div class="tb"><button class="back" onclick="go('feed')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Wallet</span><span class="t3">tracked, not held</span></div>
+    <div class="scroll" style="padding:14px">
+      <div style="background:var(--blue);border-radius:13px;padding:18px;text-align:center;margin-bottom:13px"><div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px">Net this month</div><div style="font-size:26px;font-weight:600;color:#fff">+$33.50</div></div>
+      <div class="t2" style="font-weight:500;margin-bottom:9px"><i class="ti ti-clock" style="vertical-align:-1px"></i> Pending payment</div>
+      <div style="border:1px solid var(--border);border-radius:11px;padding:11px;margin-bottom:15px">
+        <div class="row bt" style="margin-bottom:9px"><div class="row g8"><div style="width:30px;height:30px;border-radius:50%;background:var(--food-bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-tools-kitchen-2" style="font-size:14px;color:var(--food)"></i></div><div><div class="t1">Biryani order</div><div class="t3">to spicy_kitchen_22</div></div></div><div class="t1">$7.00</div></div>
+        <button class="btn bp" style="width:100%;padding:8px;font-size:12px" onclick="this.innerHTML='✓ Paid · recorded'"><i class="ti ti-check"></i> Mark as paid</button>
+      </div>
+      <div class="t2" style="font-weight:500;margin-bottom:9px">Completed</div>
+      <div class="row bt" style="padding:9px 0;border-bottom:1px solid var(--border2)"><div class="row g8"><div style="width:30px;height:30px;border-radius:50%;background:var(--ride-bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-car" style="font-size:14px;color:var(--ride)"></i></div><div><div class="t1">Airport run</div><div class="t3">Sat 6am</div></div></div><span class="t1" style="color:var(--ok)">+$12.00</span></div>
+      <div class="row bt" style="padding:9px 0"><div class="row g8"><div style="width:30px;height:30px;border-radius:50%;background:var(--sale-bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-tag" style="font-size:14px;color:var(--sale)"></i></div><div><div class="t1">Sold textbook</div><div class="t3">Fri 2pm</div></div></div><span class="t1" style="color:var(--ok)">+$12.00</span></div>
+    </div>
+    <div class="bn">
+      <button class="nb" onclick="go('feed')"><i class="ti ti-home"></i>Feed</button>
+      <button class="nb" onclick="go('food')"><i class="ti ti-tools-kitchen-2"></i>Food</button>
+      <button class="nb" onclick="go('rides')"><i class="ti ti-car"></i>Rides</button>
+      <button class="nb" onclick="go('sales')"><i class="ti ti-tag"></i>Sales</button>
+      <button class="nb on"><i class="ti ti-wallet"></i>Wallet</button>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="scr" id="messages">
+    <div class="tb"><button class="back" onclick="go('feed')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Messages</span><div style="width:20px"></div></div>
+    <div class="scroll">
+      <div onclick="go('chat')" class="row g10" style="padding:13px 16px;border-bottom:1px solid var(--border2);cursor:pointer"><div class="av" style="width:42px;height:42px">👩</div><div style="flex:1"><div class="row bt"><span class="t1">spicy_kitchen_22</span><span class="t3">3m</span></div><div class="t2">Order confirmed · ready at 6pm</div></div></div>
+      <div onclick="go('chat')" class="row g10" style="padding:13px 16px;border-bottom:1px solid var(--border2);cursor:pointer"><div class="av" style="width:42px;height:42px">👩</div><div style="flex:1"><div class="row bt"><span class="t1">campus_cab_ub</span><span class="t3">1h</span></div><div class="t2">On my way to pickup</div></div></div>
+      <div onclick="go('chat')" class="row g10" style="padding:13px 16px;cursor:pointer"><div class="av" style="width:42px;height:42px">🦉</div><div style="flex:1"><div class="row bt"><span class="t1">Night Owl #318</span><span class="t3">2h</span></div><div class="t2">Is the sublease still open?</div></div></div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="scr" id="chat">
+    <div class="tb"><button class="back" onclick="go('messages')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><div class="row g6"><div class="av" style="width:28px;height:28px;font-size:14px">👩</div><span class="t1">spicy_kitchen_22</span></div><div style="width:20px"></div></div>
+    <div class="scroll" style="padding:14px;display:flex;flex-direction:column;gap:9px">
+      <div style="align-self:flex-start;background:var(--border2);border-radius:13px 13px 13px 4px;padding:10px 12px;max-width:78%"><div class="t1">Hey! Your biryani is confirmed</div><div class="t3" style="margin-top:3px">6:08pm</div></div>
+      <div style="align-self:flex-end;background:var(--blue);border-radius:13px 13px 4px 13px;padding:10px 12px;max-width:78%"><div style="font-size:13px;color:#fff">Great! Pickup or rider?</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:3px">6:09pm</div></div>
+      <div style="align-self:flex-start;background:var(--border2);border-radius:13px 13px 13px 4px;padding:10px 12px;max-width:78%"><div class="t1">Rider assigned · 🐺 Wolf #2219 on the way</div><div class="t3" style="margin-top:3px">6:10pm</div></div>
+    </div>
+    <div style="padding:10px 14px;border-top:1px solid var(--border2);display:flex;gap:8px"><input class="inp" placeholder="Message…" style="border-radius:20px"/><button class="btn bp" style="padding:9px 13px;border-radius:20px"><i class="ti ti-send" style="font-size:16px"></i></button></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="scr" id="profile">
+    <div class="tb"><button class="back" onclick="go('feed')"><i class="ti ti-arrow-left" style="font-size:20px"></i></button><span class="t1">Profile</span><i class="ti ti-settings" style="font-size:20px;color:var(--ts)"></i></div>
+    <div class="scroll">
+      <div style="text-align:center;padding:20px 16px 12px">
+        <div style="width:68px;height:68px;border-radius:50%;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 9px">🐃</div>
+        <div style="font-size:15px;font-weight:600">Buffalo #4821</div>
+        <div class="t3" style="margin-bottom:9px">joined 2 weeks ago</div>
+        <div class="row" style="justify-content:center;gap:6px;flex-wrap:wrap"><span class="chip"><i class="ti ti-eye-off"></i> anonymous</span><span class="chip cr">new member</span><span class="chip" style="background:var(--light);color:var(--blue);cursor:pointer"><i class="ti ti-plus"></i> verify UB</span></div>
+      </div>
+      <div style="margin:0 14px 4px;border:1px solid var(--blue);border-radius:12px;padding:13px;background:var(--light)">
+        <div class="row bt" style="margin-bottom:9px"><div class="t1" style="color:var(--blue)">Complete your profile</div><div class="t3" style="color:var(--blue)">2 of 4</div></div>
+        <div style="height:6px;background:rgba(0,91,187,.15);border-radius:3px;margin-bottom:11px;overflow:hidden"><div style="width:50%;height:100%;background:var(--blue)"></div></div>
+        <div class="row g8" style="margin-bottom:7px"><i class="ti ti-circle-check" style="font-size:15px;color:var(--ok)"></i><span class="t2">Phone verified</span></div>
+        <div class="row g8" style="margin-bottom:7px"><i class="ti ti-circle-check" style="font-size:15px;color:var(--ok)"></i><span class="t2">Avatar chosen</span></div>
+        <div class="row g8" style="margin-bottom:7px;cursor:pointer"><i class="ti ti-circle" style="font-size:15px;color:var(--blue)"></i><span class="t1" style="color:var(--blue)">Verify UB email → trusted tag</span></div>
+        <div class="row g8" style="cursor:pointer"><i class="ti ti-circle" style="font-size:15px;color:var(--blue)"></i><span class="t1" style="color:var(--blue)">Add a name & photo (optional)</span></div>
+      </div>
+      <div style="display:flex;gap:8px;padding:14px">
+        <div style="flex:1;background:var(--border2);border-radius:9px;padding:10px;text-align:center"><div class="t3">Rating</div><div style="font-size:18px;font-weight:600">4.9</div></div>
+        <div style="flex:1;background:var(--border2);border-radius:9px;padding:10px;text-align:center"><div class="t3">Orders</div><div style="font-size:18px;font-weight:600">12</div></div>
+        <div style="flex:1;background:var(--border2);border-radius:9px;padding:10px;text-align:center"><div class="t3">Rides</div><div style="font-size:18px;font-weight:600">3</div></div>
+        <div style="flex:1;background:var(--border2);border-radius:9px;padding:10px;text-align:center"><div class="t3">No-shows</div><div style="font-size:18px;font-weight:600">0</div></div>
+      </div>
+      <div class="sec">Tags you can earn</div>
+      <div style="padding:0 14px 4px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip ce"><i class="ti ti-shield-check"></i> UB verified</span><span class="chip" style="opacity:.6"><i class="ti ti-lock"></i> trusted seller · 8 more</span><span class="chip" style="opacity:.6"><i class="ti ti-lock"></i> top rider · 7 more</span></div>
+      <div class="sec">Your posts</div>
+      <div class="row g8" style="padding:8px 16px"><div class="av" style="border-radius:8px"><i class="ti ti-bowl-spoon" style="font-size:18px;color:var(--tt)"></i></div><div style="flex:1"><div class="t1">Homemade pasta · 5 plates</div><div class="t3">active · 3 orders</div></div><i class="ti ti-chevron-right" style="color:var(--tt)"></i></div>
+      <div class="sec">Saved & bookmarks</div>
+      <div class="row g8" style="padding:8px 16px"><div class="av" style="border-radius:8px"><i class="ti ti-car" style="font-size:18px;color:var(--tt)"></i></div><div style="flex:1"><div class="t1">Weekly Costco run · Sundays</div><div class="t3">by campus_cab_ub</div></div><i class="ti ti-bookmark-filled" style="color:var(--blue)"></i></div>
+      <div class="sec">Settings</div>
+      <div class="li"><span><i class="ti ti-shield-check" style="font-size:16px;color:var(--ts);vertical-align:-3px;margin-right:8px"></i>Verify UB email</span><i class="ti ti-chevron-right" style="color:var(--tt)"></i></div>
+      <div class="li"><span><i class="ti ti-user-edit" style="font-size:16px;color:var(--ts);vertical-align:-3px;margin-right:8px"></i>Edit identity</span><i class="ti ti-chevron-right" style="color:var(--tt)"></i></div>
+      <div class="li"><span><i class="ti ti-cash" style="font-size:16px;color:var(--ts);vertical-align:-3px;margin-right:8px"></i>Payment handles</span><i class="ti ti-chevron-right" style="color:var(--tt)"></i></div>
+      <div class="li"><span><i class="ti ti-users" style="font-size:16px;color:var(--ts);vertical-align:-3px;margin-right:8px"></i>Invite friends</span><i class="ti ti-chevron-right" style="color:var(--tt)"></i></div>
+      <div class="li" style="color:var(--danger)"><span><i class="ti ti-logout" style="font-size:16px;vertical-align:-3px;margin-right:8px"></i>Log out</span></div>
+      <div style="height:12px"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+function go(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  var el=document.getElementById(id); el.classList.add('on');
+  var sc=el.querySelector('.scroll'); if(sc) sc.scrollTop=0;
+}
+function selF(t){
+  document.getElementById('fp').style.border=t==='p'?'2px solid var(--blue)':'1px solid var(--border)';
+  document.getElementById('fd').style.border=t==='d'?'2px solid var(--blue)':'1px solid var(--border)';
+  document.getElementById('delrow').style.display=t==='d'?'flex':'none';
+  document.getElementById('ototal').textContent=t==='d'?'$9.00':'$7.00';
+}
+</script>
+</body>
+</html>
