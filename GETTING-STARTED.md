@@ -12,7 +12,9 @@ These three setup steps are quick and clear — doing them by hand first means C
 
 ### 2. Create your Supabase project
 1. Sign up at https://supabase.com → New project (name it `ub-community`, US East region).
-2. When it's ready: SQL Editor → New query → paste ALL of `supabase-schema.sql` → Run. You should see "Success" and sample data appears in Table Editor.
+2. Apply the database schema — pick ONE:
+   - **Automatic via GitHub (recommended):** In the Supabase dashboard → **Settings → Integrations → GitHub**, connect this repo and select your branch. Supabase then applies `supabase/migrations/*.sql` automatically on every push — no copy-paste, and future schema changes ship the same way. The initial schema is `supabase/migrations/20260621000000_initial_schema.sql`; sample rows live in `supabase/seed.sql` (preview branches only, never prod).
+   - **Manual one-time:** SQL Editor → New query → paste ALL of `supabase-schema.sql` → Run. You should see "Success" and sample data appears in Table Editor.
 3. Turn on phone auth: Authentication → Providers → Phone → enable. Supabase needs an SMS provider (Twilio is the usual choice — free trial works for testing). Add your Twilio keys in that screen. (For pure local testing you can temporarily enable email OTP instead and switch to phone before launch.)
 
 ### 3. Wire up env vars
