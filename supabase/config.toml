@@ -1,0 +1,15 @@
+# Supabase project config.
+#
+# The GitHub integration links this repo to the hosted "ub community" project
+# (configured in the Supabase dashboard: Settings -> Integrations -> GitHub),
+# then applies every file in supabase/migrations/ in timestamp order on each
+# push to the linked branch.
+#
+# `project_id` is just the local CLI project name. Sample data in
+# supabase/seed.sql is the CLI's default seed path — it runs on
+# `supabase db reset` and preview branches, never on production.
+project_id = "ub-community"
+
+[db]
+# Postgres major version of the hosted project. Bump if your project differs.
+major_version = 15

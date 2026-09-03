@@ -1,14 +1,8 @@
 -- ============================================================
--- UB COMMUNITY — DATABASE SCHEMA (final)
--- Phone-OTP auth · no gating · verification is a trust tag
---
--- TWO WAYS TO APPLY THIS:
---   1. Automatic (recommended): the Supabase GitHub integration applies
---      supabase/migrations/*.sql on every push. This root file is kept as a
---      manual fallback only — the migration is the source of truth.
---   2. Manual: paste this whole file into Supabase → SQL Editor → Run.
---      (Re-running on an existing DB will error on the plain CREATEs below;
---      use the migration in supabase/migrations/ for idempotent re-runs.)
+-- UB COMMUNITY — INITIAL SCHEMA (migration)
+-- Phone-OTP auth · no gating · verification is a trust tag.
+-- Applied automatically by the Supabase GitHub integration.
+-- Seed/sample data lives in supabase/seed.sql (never runs on prod).
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -20,7 +14,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- our tables keep only a one-way HASH for uniqueness, never the
 -- raw number, and never display it.
 -- ============================================================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   auth_id         UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -59,19 +53,19 @@ CREATE TABLE users (
 
 -- Ban enforcement without storing identity: when a user is banned,
 -- copy their hashes here so a new signup with the same phone/email is blocked.
-CREATE TABLE blocked_identifiers (
+CREATE TABLE IF NOT EXISTS blocked_identifiers (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   hash        TEXT NOT NULL,
   hash_type   TEXT CHECK (hash_type IN ('phone', 'ub_email')),
   reason      TEXT
 );
-CREATE INDEX idx_blocked_hash ON blocked_identifiers(hash);
+CREATE INDEX IF NOT EXISTS idx_blocked_hash ON blocked_identifiers(hash);
 
 -- ============================================================
 -- POSTS — the feed. Food / ride / sale / event / community.
 -- ============================================================
-CREATE TABLE posts (
+CREATE TABLE IF NOT EXISTS posts (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   updated_at      TIMESTAMPTZ DEFAULT NOW(),
@@ -91,11 +85,11 @@ CREATE TABLE posts (
   like_count      INTEGER DEFAULT 0,
   view_count      INTEGER DEFAULT 0
 );
-CREATE INDEX idx_posts_feed ON posts(status, created_at DESC);
-CREATE INDEX idx_posts_type ON posts(type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_feed ON posts(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_type ON posts(type, created_at DESC);
 
 -- ----- Type-specific detail tables -----
-CREATE TABLE food_listings (
+CREATE TABLE IF NOT EXISTS food_listings (
   id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id            UUID REFERENCES posts(id) ON DELETE CASCADE UNIQUE,
   price              DECIMAL(10,2) NOT NULL,
@@ -109,7 +103,7 @@ CREATE TABLE food_listings (
   dietary_tags       TEXT[] DEFAULT '{}'
 );
 
-CREATE TABLE ride_listings (
+CREATE TABLE IF NOT EXISTS ride_listings (
   id                     UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id                UUID REFERENCES posts(id) ON DELETE CASCADE UNIQUE,
   pickup_label           TEXT NOT NULL,
@@ -124,7 +118,7 @@ CREATE TABLE ride_listings (
   ride_mode              TEXT DEFAULT 'scheduled' CHECK (ride_mode IN ('scheduled','instant'))
 );
 
-CREATE TABLE sale_listings (
+CREATE TABLE IF NOT EXISTS sale_listings (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id         UUID REFERENCES posts(id) ON DELETE CASCADE UNIQUE,
   price           DECIMAL(10,2),
@@ -139,7 +133,7 @@ CREATE TABLE sale_listings (
   lease_until          DATE
 );
 
-CREATE TABLE event_listings (
+CREATE TABLE IF NOT EXISTS event_listings (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id       UUID REFERENCES posts(id) ON DELETE CASCADE UNIQUE,
   event_time    TIMESTAMPTZ,
@@ -151,7 +145,7 @@ CREATE TABLE event_listings (
 -- ORDERS — payments are EXTERNAL. Platform tracks, never holds.
 -- Two-sided confirmation closes the dispute gap.
 -- ============================================================
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW(),
@@ -174,6 +168,10 @@ CREATE TABLE orders (
   seller_marked_paid  BOOLEAN DEFAULT FALSE,
   payment_note     TEXT,
 
+  -- Two-sided handoff confirmation for food delivery.
+  seller_confirmed_handoff BOOLEAN DEFAULT FALSE,
+  rider_confirmed_handoff  BOOLEAN DEFAULT FALSE,
+
   status           TEXT DEFAULT 'pending' CHECK (
     status IN ('pending','accepted','rider_assigned','in_transit','delivered','completed','cancelled','disputed')
   ),
@@ -182,13 +180,13 @@ CREATE TABLE orders (
   delivered_at     TIMESTAMPTZ,
   completed_at     TIMESTAMPTZ
 );
-CREATE INDEX idx_orders_buyer ON orders(buyer_id, created_at DESC);
-CREATE INDEX idx_orders_seller ON orders(seller_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_buyer ON orders(buyer_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_seller ON orders(seller_id, created_at DESC);
 
 -- ============================================================
 -- ENGAGEMENT & SOCIAL
 -- ============================================================
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   sender_id       UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -202,16 +200,16 @@ CREATE TABLE messages (
       ELSE receiver_id::TEXT || '_' || sender_id::TEXT END
   ) STORED
 );
-CREATE INDEX idx_messages_convo ON messages(conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_convo ON messages(conversation_id, created_at);
 
-CREATE TABLE likes (
+CREATE TABLE IF NOT EXISTS likes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
   UNIQUE(user_id, post_id)
 );
 
-CREATE TABLE bookmarks (
+CREATE TABLE IF NOT EXISTS bookmarks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -219,7 +217,7 @@ CREATE TABLE bookmarks (
   UNIQUE(user_id, post_id)
 );
 
-CREATE TABLE follows (
+CREATE TABLE IF NOT EXISTS follows (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -227,14 +225,14 @@ CREATE TABLE follows (
   UNIQUE(follower_id, followed_id)
 );
 
-CREATE TABLE event_interests (
+CREATE TABLE IF NOT EXISTS event_interests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
   UNIQUE(user_id, post_id)
 );
 
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -244,9 +242,9 @@ CREATE TABLE notifications (
   link TEXT,                     -- in-app route to open
   read_at TIMESTAMPTZ
 );
-CREATE INDEX idx_notif_user ON notifications(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id, created_at DESC);
 
-CREATE TABLE reports (
+CREATE TABLE IF NOT EXISTS reports (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   reporter_id UUID REFERENCES users(id),
@@ -257,10 +255,20 @@ CREATE TABLE reports (
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending','reviewed','resolved','dismissed'))
 );
 
+-- UB email verification codes (one row per user, replaced on each request).
+-- Stores only the email HASH plus a short-lived code — never the raw email.
+CREATE TABLE IF NOT EXISTS ub_verifications (
+  user_id     UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  email_hash  TEXT NOT NULL,
+  code        TEXT NOT NULL,
+  expires_at  TIMESTAMPTZ NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================================
 -- ADMIN VIEW
 -- ============================================================
-CREATE VIEW admin_stats AS SELECT
+CREATE OR REPLACE VIEW admin_stats AS SELECT
   (SELECT COUNT(*) FROM users) AS total_users,
   (SELECT COUNT(*) FROM users WHERE is_ub_verified) AS verified_users,
   (SELECT COUNT(*) FROM posts WHERE status='active') AS active_posts,
@@ -270,11 +278,13 @@ CREATE VIEW admin_stats AS SELECT
   (SELECT COUNT(*) FROM reports WHERE status='pending') AS pending_reports;
 
 -- ============================================================
--- TRIGGERS — counters & timestamps
+-- TRIGGERS — counters, timestamps, custody, completion
 -- ============================================================
 CREATE OR REPLACE FUNCTION touch_updated_at() RETURNS TRIGGER AS $$
 BEGIN NEW.updated_at = NOW(); RETURN NEW; END; $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS t_posts_updated ON posts;
 CREATE TRIGGER t_posts_updated  BEFORE UPDATE ON posts  FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
+DROP TRIGGER IF EXISTS t_orders_updated ON orders;
 CREATE TRIGGER t_orders_updated BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
 CREATE OR REPLACE FUNCTION bump_like_count() RETURNS TRIGGER AS $$
@@ -282,6 +292,7 @@ BEGIN
   IF TG_OP='INSERT' THEN UPDATE posts SET like_count=like_count+1 WHERE id=NEW.post_id;
   ELSIF TG_OP='DELETE' THEN UPDATE posts SET like_count=GREATEST(0,like_count-1) WHERE id=OLD.post_id; END IF;
   RETURN NULL; END; $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS t_like_count ON likes;
 CREATE TRIGGER t_like_count AFTER INSERT OR DELETE ON likes FOR EACH ROW EXECUTE FUNCTION bump_like_count();
 
 -- When both sides confirm payment, complete the order.
@@ -291,76 +302,8 @@ BEGIN
     NEW.status := 'completed'; NEW.completed_at := NOW();
   END IF;
   RETURN NEW; END; $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS t_complete_paid ON orders;
 CREATE TRIGGER t_complete_paid BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION complete_when_paid();
-
--- ============================================================
--- ROW LEVEL SECURITY
--- ============================================================
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY p_users_read   ON users  FOR SELECT USING (TRUE);
-CREATE POLICY p_users_write  ON users  FOR UPDATE USING (auth.uid() = auth_id);
-CREATE POLICY p_posts_read   ON posts  FOR SELECT USING (TRUE);
-CREATE POLICY p_posts_write  ON posts  FOR ALL USING (auth.uid() = (SELECT auth_id FROM users WHERE id = user_id));
-CREATE POLICY p_orders_read  ON orders FOR SELECT USING (
-  auth.uid() IN (SELECT auth_id FROM users WHERE id IN (buyer_id, seller_id, rider_id)));
-CREATE POLICY p_orders_write ON orders FOR ALL USING (
-  auth.uid() IN (SELECT auth_id FROM users WHERE id IN (buyer_id, seller_id, rider_id)));
-CREATE POLICY p_msg_read     ON messages FOR SELECT USING (
-  auth.uid() IN (SELECT auth_id FROM users WHERE id IN (sender_id, receiver_id)));
-CREATE POLICY p_msg_write    ON messages FOR INSERT WITH CHECK (
-  auth.uid() = (SELECT auth_id FROM users WHERE id = sender_id));
-CREATE POLICY p_bm           ON bookmarks FOR ALL USING (
-  auth.uid() = (SELECT auth_id FROM users WHERE id = user_id));
-CREATE POLICY p_notif        ON notifications FOR SELECT USING (
-  auth.uid() = (SELECT auth_id FROM users WHERE id = user_id));
-
--- ============================================================
--- SEED DATA (for local testing; auth_id NULL is fine here)
--- ============================================================
-INSERT INTO users (display_name, avatar_emoji, is_ub_verified, is_anonymous) VALUES
-('spicy_kitchen_22','👩',TRUE,FALSE),
-('northwind_rides','🧑',TRUE,FALSE),
-('Wolf #2219','🐺',FALSE,TRUE),
-('Night Owl #318','🦉',FALSE,TRUE);
-
-INSERT INTO posts (user_id, type, title, description, location_zone, location_label)
-VALUES ((SELECT id FROM users WHERE display_name='spicy_kitchen_22'),'food',
-  'Homemade chicken biryani','Fragrant basmati, spiced chicken, raita included.',
-  'north_campus','Ellicott complex');
-INSERT INTO food_listings (post_id, price, pickup_available, delivery_available, delivery_fee, quantity_total, quantity_remaining, available_until, dietary_tags)
-VALUES ((SELECT id FROM posts WHERE title='Homemade chicken biryani'),7.00,TRUE,TRUE,2.00,10,8,NOW()+INTERVAL '3 hours','{"halal"}');
-
-INSERT INTO posts (user_id, type, title, description, location_zone, location_label)
-VALUES ((SELECT id FROM users WHERE display_name='northwind_rides'),'ride',
-  'North campus → Buffalo airport','Toyota Camry, room for luggage.','north_campus','Ring Rd south gate');
-INSERT INTO ride_listings (post_id, pickup_label, dropoff_label, departure_time, seats_total, seats_remaining, price_per_seat, vehicle_description)
-VALUES ((SELECT id FROM posts WHERE title='North campus → Buffalo airport'),
-  'North campus · Ring Rd','Buffalo airport (BUF)',NOW()+INTERVAL '2 days',3,2,12.00,'Toyota Camry');
-
-INSERT INTO posts (user_id, type, title, description, location_zone, location_label)
-VALUES ((SELECT id FROM users WHERE display_name='Night Owl #318'),'sale',
-  '1BR sublease · Ellicott','Furnished, May–Aug, near North campus.','north_campus','Ellicott complex');
-INSERT INTO sale_listings (post_id, condition, category, is_accommodation, accommodation_type, lease_price_monthly)
-VALUES ((SELECT id FROM posts WHERE title='1BR sublease · Ellicott'),'good','accommodation',TRUE,'sublease',650.00);
-
-INSERT INTO posts (user_id, type, title, description, location_zone, location_label)
-VALUES ((SELECT id FROM users WHERE display_name='Wolf #2219'),'community',
-  'Snow day — North Campus buried right now','Classes cancelled, quad looks unreal.','north_campus','North Campus');
-
--- ============================================================
--- ADDITIONS (app build) — chain-of-custody, claim RPC, and
--- notification triggers. Safe to run on top of the base schema.
--- ============================================================
-
--- Two-sided handoff confirmation for food delivery.
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_confirmed_handoff BOOLEAN DEFAULT FALSE;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_confirmed_handoff  BOOLEAN DEFAULT FALSE;
 
 -- When BOTH seller and rider confirm the handoff, custody flips to the rider
 -- and the order moves to in_transit. The seller is now guaranteed payment.
@@ -424,15 +367,53 @@ DROP TRIGGER IF EXISTS t_notify_message ON messages;
 CREATE TRIGGER t_notify_message AFTER INSERT ON messages FOR EACH ROW EXECUTE FUNCTION notify_new_message();
 
 -- Allow realtime streaming of notifications and messages to clients.
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+-- Guarded so re-running (or a project that already has the tables published)
+-- never errors the migration.
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- UB email verification codes (one row per user, replaced on each request).
--- Stores only the email HASH plus a short-lived code — never the raw email.
-CREATE TABLE IF NOT EXISTS ub_verifications (
-  user_id     UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  email_hash  TEXT NOT NULL,
-  code        TEXT NOT NULL,
-  expires_at  TIMESTAMPTZ NOT NULL,
-  created_at  TIMESTAMPTZ DEFAULT NOW()
-);
+-- ============================================================
+-- ROW LEVEL SECURITY
+-- ============================================================
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS p_users_read   ON users;
+DROP POLICY IF EXISTS p_users_write  ON users;
+DROP POLICY IF EXISTS p_posts_read   ON posts;
+DROP POLICY IF EXISTS p_posts_write  ON posts;
+DROP POLICY IF EXISTS p_orders_read  ON orders;
+DROP POLICY IF EXISTS p_orders_write ON orders;
+DROP POLICY IF EXISTS p_msg_read     ON messages;
+DROP POLICY IF EXISTS p_msg_write    ON messages;
+DROP POLICY IF EXISTS p_bm           ON bookmarks;
+DROP POLICY IF EXISTS p_notif        ON notifications;
+
+CREATE POLICY p_users_read   ON users  FOR SELECT USING (TRUE);
+CREATE POLICY p_users_write  ON users  FOR UPDATE USING (auth.uid() = auth_id);
+CREATE POLICY p_posts_read   ON posts  FOR SELECT USING (TRUE);
+CREATE POLICY p_posts_write  ON posts  FOR ALL USING (auth.uid() = (SELECT auth_id FROM users WHERE id = user_id));
+CREATE POLICY p_orders_read  ON orders FOR SELECT USING (
+  auth.uid() IN (SELECT auth_id FROM users WHERE id IN (buyer_id, seller_id, rider_id)));
+CREATE POLICY p_orders_write ON orders FOR ALL USING (
+  auth.uid() IN (SELECT auth_id FROM users WHERE id IN (buyer_id, seller_id, rider_id)));
+CREATE POLICY p_msg_read     ON messages FOR SELECT USING (
+  auth.uid() IN (SELECT auth_id FROM users WHERE id IN (sender_id, receiver_id)));
+CREATE POLICY p_msg_write    ON messages FOR INSERT WITH CHECK (
+  auth.uid() = (SELECT auth_id FROM users WHERE id = sender_id));
+CREATE POLICY p_bm           ON bookmarks FOR ALL USING (
+  auth.uid() = (SELECT auth_id FROM users WHERE id = user_id));
+CREATE POLICY p_notif        ON notifications FOR SELECT USING (
+  auth.uid() = (SELECT auth_id FROM users WHERE id = user_id));
