@@ -39,6 +39,13 @@ export default function WelcomePage() {
       setError('Temporary or disposable email addresses are not allowed')
       return
     }
+    // Guard: catch misconfigured env vars before wasting an OTP request.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      setError('App is not fully configured yet — check NEXT_PUBLIC_SUPABASE_URL in Vercel and redeploy.')
+      return
+    }
+
     setLoading(true)
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
@@ -46,7 +53,11 @@ export default function WelcomePage() {
     })
     setLoading(false)
     if (error) {
-      setError(error.message)
+      setError(
+        error.message === 'Failed to fetch'
+          ? 'Could not reach the server. Check that your Supabase URL is correct in Vercel and that the project is not paused.'
+          : error.message,
+      )
       return
     }
     setStep('otp')
