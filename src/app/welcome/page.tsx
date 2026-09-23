@@ -1,21 +1,20 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Smartphone, MailCheck, ArrowLeft, Loader2 } from 'lucide-react'
+import { Mail, MailCheck, ArrowLeft, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-type Step = 'phone' | 'otp'
+type Step = 'email' | 'otp'
 
 export default function WelcomePage() {
   const router = useRouter()
-  const [step, setStep] = useState<Step>('phone')
-  const [phone, setPhone] = useState('')
+  const [step, setStep] = useState<Step>('email')
+  const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resendIn, setResendIn] = useState(0)
 
-  // Already signed in? Skip straight into the app.
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) router.replace('/feed')
@@ -28,23 +27,18 @@ export default function WelcomePage() {
     return () => clearTimeout(t)
   }, [resendIn])
 
-  function normalize(p: string): string {
-    const digits = p.replace(/[^\d]/g, '')
-    // Default to US country code if a bare 10-digit number is entered.
-    if (digits.length === 10) return `+1${digits}`
-    if (p.trim().startsWith('+')) return `+${digits}`
-    return `+${digits}`
-  }
-
   async function sendCode() {
     setError('')
-    const e164 = normalize(phone)
-    if (e164.replace(/\D/g, '').length < 10) {
-      setError('Enter a valid phone number')
+    const trimmed = email.trim().toLowerCase()
+    if (!trimmed.includes('@')) {
+      setError('Enter a valid email address')
       return
     }
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOtp({ phone: e164 })
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: { shouldCreateUser: true },
+    })
     setLoading(false)
     if (error) {
       setError(error.message)
@@ -62,9 +56,9 @@ export default function WelcomePage() {
     }
     setLoading(true)
     const { error } = await supabase.auth.verifyOtp({
-      phone: normalize(phone),
+      email: email.trim().toLowerCase(),
       token: code,
-      type: 'sms',
+      type: 'email',
     })
     if (error) {
       setLoading(false)
@@ -72,14 +66,13 @@ export default function WelcomePage() {
       return
     }
 
-    // Create (or reclaim) our user row server-side, then route.
     const res = await fetch('/api/user/ensure', { method: 'POST' })
     const json = await res.json()
     setLoading(false)
     if (!res.ok) {
       setError(
         json.error === 'account_blocked'
-          ? 'This number is not allowed to sign up.'
+          ? 'This account is not allowed to sign up.'
           : 'Something went wrong creating your account.',
       )
       return
@@ -91,14 +84,14 @@ export default function WelcomePage() {
     <div className="min-h-screen flex flex-col">
       {step === 'otp' && (
         <div className="flex items-center px-4 py-3 border-b border-gray-100">
-          <button onClick={() => setStep('phone')} className="text-gray-500">
+          <button onClick={() => setStep('email')} className="text-gray-500">
             <ArrowLeft size={20} />
           </button>
           <span className="text-sm font-medium mx-auto pr-5">Enter code</span>
         </div>
       )}
 
-      {step === 'phone' ? (
+      {step === 'email' ? (
         <div className="flex-1 flex flex-col items-center justify-center px-7 py-9 gap-5">
           <div className="w-[70px] h-[70px] rounded-2xl bg-ub-blue flex items-center justify-center">
             <span className="text-white font-semibold text-3xl">UB</span>
@@ -114,13 +107,15 @@ export default function WelcomePage() {
           </div>
 
           <div className="w-full">
-            <label className="text-xs text-gray-400 mb-1.5 block">Phone number</label>
+            <label className="text-xs text-gray-400 mb-1.5 block">Email address</label>
             <input
               className="input mb-2.5"
-              placeholder="(716) 555-0148"
-              inputMode="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              placeholder="you@buffalo.edu"
+              inputMode="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendCode()}
             />
             {error && <div className="text-xs text-red-500 mb-2">{error}</div>}
             <button
@@ -128,22 +123,22 @@ export default function WelcomePage() {
               onClick={sendCode}
               disabled={loading}
             >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <Smartphone size={16} />}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
               Send code
             </button>
           </div>
           <div className="text-xs text-gray-400 text-center leading-relaxed">
-            One tap. No name, no email required.
+            One tap. No passwords required.
             <br />
-            Your number is hashed — we never store or show it.
+            Your email is hashed — we never store or show it.
           </div>
         </div>
       ) : (
         <div className="flex-1 flex flex-col px-4 py-6 gap-5">
           <div className="text-center">
             <MailCheck size={36} className="text-ub-blue mx-auto" />
-            <div className="text-sm font-medium mt-2.5 mb-1">Check your texts</div>
-            <div className="text-sm text-gray-500">6-digit code sent to your phone</div>
+            <div className="text-sm font-medium mt-2.5 mb-1">Check your inbox</div>
+            <div className="text-sm text-gray-500">6-digit code sent to {email}</div>
           </div>
           <input
             className="input text-center tracking-[0.5em] text-xl"
@@ -152,6 +147,7 @@ export default function WelcomePage() {
             maxLength={6}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={(e) => e.key === 'Enter' && verify()}
           />
           {error && <div className="text-xs text-red-500 text-center">{error}</div>}
           <button className="btn btn-primary w-full py-3" onClick={verify} disabled={loading}>

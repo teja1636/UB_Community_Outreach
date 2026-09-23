@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { hashPhone } from '@/lib/hash'
+import { hashEmail } from '@/lib/hash'
 import { generatePseudonym, DEFAULT_AVATAR } from '@/lib/constants'
 
 // POST /api/user/ensure
-// Called right after a successful phone-OTP verification. Creates the user's
-// row on first login (generated pseudonym, default avatar, phone_hash), after
-// checking the blocked list. Idempotent: returns the existing row on re-login.
+// Called right after a successful email-OTP verification. Creates the user's
+// row on first login (generated pseudonym, default avatar, phone_hash stored
+// as the email hash for Sybil defense). Idempotent: returns existing row on re-login.
 export async function POST() {
   const supabase = createSupabaseServerClient()
   const {
@@ -17,19 +17,19 @@ export async function POST() {
   if (!authUser) {
     return NextResponse.json({ error: 'not_authenticated' }, { status: 401 })
   }
-  if (!authUser.phone) {
-    return NextResponse.json({ error: 'no_phone_on_session' }, { status: 400 })
+  if (!authUser.email) {
+    return NextResponse.json({ error: 'no_email_on_session' }, { status: 400 })
   }
 
   const admin = createSupabaseAdminClient()
-  const phone_hash = hashPhone(authUser.phone)
+  const email_hash = hashEmail(authUser.email)
 
-  // 1. Ban enforcement — refuse signup if this phone is on the blocked list.
+  // 1. Ban enforcement — refuse signup if this email hash is on the blocked list.
   const { data: blocked } = await admin
     .from('blocked_identifiers')
     .select('id')
-    .eq('hash', phone_hash)
-    .eq('hash_type', 'phone')
+    .eq('hash', email_hash)
+    .eq('hash_type', 'email')
     .maybeSingle()
 
   if (blocked) {
@@ -51,19 +51,19 @@ export async function POST() {
     })
   }
 
-  // 3. One phone = one account. If a row already exists for this phone hash
-  //    (e.g. re-login on a new auth session), reclaim it rather than duplicate.
-  const { data: existingByPhone } = await admin
+  // 3. One email = one account. If a row exists for this email hash
+  //    (e.g. re-login on a new auth session), reclaim it.
+  const { data: existingByEmail } = await admin
     .from('users')
     .select('*')
-    .eq('phone_hash', phone_hash)
+    .eq('phone_hash', email_hash)
     .maybeSingle()
 
-  if (existingByPhone) {
+  if (existingByEmail) {
     const { data: relinked } = await admin
       .from('users')
       .update({ auth_id: authUser.id })
-      .eq('id', existingByPhone.id)
+      .eq('id', existingByEmail.id)
       .select('*')
       .single()
     return NextResponse.json({
@@ -79,7 +79,7 @@ export async function POST() {
       auth_id: authUser.id,
       display_name: generatePseudonym(),
       avatar_emoji: DEFAULT_AVATAR,
-      phone_hash,
+      phone_hash: email_hash,
       is_anonymous: true,
     })
     .select('*')
