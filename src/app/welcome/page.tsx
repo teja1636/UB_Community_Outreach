@@ -31,7 +31,7 @@ export default function WelcomePage() {
   async function sendCode() {
     setError('')
     const trimmed = email.trim().toLowerCase()
-    if (!trimmed.includes('@') || !trimmed.includes('.')) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmed)) {
       setError('Enter a valid email address')
       return
     }

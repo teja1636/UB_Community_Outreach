@@ -194,8 +194,30 @@ export const DISPOSABLE_DOMAINS = new Set([
   'inoutmail.net',
 ])
 
+// Additional well-known services not covered by domain list
+const EXTRA_DISPOSABLE = new Set([
+  'mailsac.com', 'mohmal.com', 'harakirimail.com', 'emailondeck.com',
+  'inboxkitten.com', 'rhyta.com', 'anonymousemail.me', 'byom.de',
+  'cuvox.de', 'dayrep.com', 'eelmail.com', 'flurred.com',
+  'haltospam.com', 'meinspamschutz.de', 'mox.pp.ua', 'plexolan.de',
+  'proxymail.eu', 'teewars.org', 'zoemail.net', 'ufacoder.com',
+  'daxmail.net', 'nwldx.com', 'kzccv.com', 'lhsdv.com',
+  'qisdo.com', 'qisoa.com', 'rvb.ro', 's0ny.net',
+  'pjjkp.com', 'virtbox.com', 'objectmail.com',
+])
+
+// If the domain contains any of these keywords it is almost certainly disposable.
+// This catches new services without requiring list updates.
+const SUSPICIOUS_PATTERNS = [
+  'tempmail', 'throwaway', 'disposable', 'trashmail', 'spammail',
+  'fakeinbox', 'burnermail', 'anonymousmail', '10minute', 'minutemail',
+  'guerrilla', 'mailinator', 'yopmail', 'discard', 'dropmail',
+]
+
 export function isDisposableEmail(email: string): boolean {
   const domain = email.trim().toLowerCase().split('@')[1]
   if (!domain) return false
-  return DISPOSABLE_DOMAINS.has(domain)
+  if (DISPOSABLE_DOMAINS.has(domain)) return true
+  if (EXTRA_DISPOSABLE.has(domain)) return true
+  return SUSPICIOUS_PATTERNS.some((p) => domain.includes(p))
 }

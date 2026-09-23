@@ -28,8 +28,24 @@ export function hashPhone(phone: string): string {
     .digest('hex')
 }
 
+// Normalize an email so the same real inbox always produces the same hash,
+// even if someone uses Gmail dots or +subaddresses to fake multiple accounts.
+export function normalizeEmail(email: string): string {
+  const lower = email.trim().toLowerCase()
+  const at = lower.indexOf('@')
+  if (at === -1) return lower
+  let local = lower.slice(0, at)
+  const domain = lower.slice(at + 1)
+  // Strip +subaddress (works for any provider)
+  local = local.split('+')[0]
+  // Gmail and Googlemail ignore dots in the local part
+  const normalDomain = domain === 'googlemail.com' ? 'gmail.com' : domain
+  if (normalDomain === 'gmail.com') local = local.replace(/\./g, '')
+  return `${local}@${normalDomain}`
+}
+
 export function hashEmail(email: string): string {
   return createHash('sha256')
-    .update(email.trim().toLowerCase() + pepper())
+    .update(normalizeEmail(email) + pepper())
     .digest('hex')
 }
