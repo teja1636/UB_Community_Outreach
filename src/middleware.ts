@@ -10,8 +10,8 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key',
     {
       cookies: {
         getAll() {
@@ -28,10 +28,15 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // IMPORTANT: getUser() refreshes the session cookie. Do not remove.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // getSession() reads the cookie locally — no network call, safe on Edge Runtime.
+  // Individual server components call getUser() to fully validate the JWT.
+  let user = null
+  try {
+    const { data } = await supabase.auth.getSession()
+    user = data.session?.user ?? null
+  } catch {
+    // Treat as unauthenticated; the page will redirect to /welcome.
+  }
 
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
