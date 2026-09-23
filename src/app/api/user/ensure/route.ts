@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { hashEmail } from '@/lib/hash'
 import { generatePseudonym, DEFAULT_AVATAR } from '@/lib/constants'
+import { isDisposableEmail } from '@/lib/disposable-emails'
 
 // POST /api/user/ensure
 // Called right after a successful email-OTP verification. Creates the user's
@@ -19,6 +20,10 @@ export async function POST() {
   }
   if (!authUser.email) {
     return NextResponse.json({ error: 'no_email_on_session' }, { status: 400 })
+  }
+  if (isDisposableEmail(authUser.email)) {
+    await supabase.auth.signOut()
+    return NextResponse.json({ error: 'disposable_email' }, { status: 403 })
   }
 
   const admin = createSupabaseAdminClient()

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, MailCheck, ArrowLeft, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { isDisposableEmail } from '@/lib/disposable-emails'
 
 type Step = 'email' | 'otp'
 
@@ -30,8 +31,12 @@ export default function WelcomePage() {
   async function sendCode() {
     setError('')
     const trimmed = email.trim().toLowerCase()
-    if (!trimmed.includes('@')) {
+    if (!trimmed.includes('@') || !trimmed.includes('.')) {
       setError('Enter a valid email address')
+      return
+    }
+    if (isDisposableEmail(trimmed)) {
+      setError('Temporary or disposable email addresses are not allowed')
       return
     }
     setLoading(true)
@@ -73,6 +78,8 @@ export default function WelcomePage() {
       setError(
         json.error === 'account_blocked'
           ? 'This account is not allowed to sign up.'
+          : json.error === 'disposable_email'
+          ? 'Temporary or disposable email addresses are not allowed.'
           : 'Something went wrong creating your account.',
       )
       return
