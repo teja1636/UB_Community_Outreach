@@ -28,12 +28,12 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // IMPORTANT: getUser() refreshes the session cookie. Do not remove.
-  // Wrapped in try-catch so a Supabase network error doesn't crash every page.
+  // getSession() reads the cookie locally — no network call, safe on Edge Runtime.
+  // Individual server components call getUser() to fully validate the JWT.
   let user = null
   try {
-    const { data } = await supabase.auth.getUser()
-    user = data.user
+    const { data } = await supabase.auth.getSession()
+    user = data.session?.user ?? null
   } catch {
     // Treat as unauthenticated; the page will redirect to /welcome.
   }
