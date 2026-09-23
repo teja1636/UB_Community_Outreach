@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, MailCheck, ArrowLeft, Loader2 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase, initSupabase } from '@/lib/supabase'
 import { isDisposableEmail } from '@/lib/disposable-emails'
 
 type Step = 'email' | 'otp'
@@ -39,25 +39,15 @@ export default function WelcomePage() {
       setError('Temporary or disposable email addresses are not allowed')
       return
     }
-    // Guard: catch misconfigured env vars before wasting an OTP request.
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-      setError('App is not fully configured yet — check NEXT_PUBLIC_SUPABASE_URL in Vercel and redeploy.')
-      return
-    }
-
     setLoading(true)
+    await initSupabase()
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
       options: { shouldCreateUser: true },
     })
     setLoading(false)
     if (error) {
-      setError(
-        error.message === 'Failed to fetch'
-          ? 'Could not reach the server. Check that your Supabase URL is correct in Vercel and that the project is not paused.'
-          : error.message,
-      )
+      setError(error.message)
       return
     }
     setStep('otp')

@@ -7,7 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
-import { supabase } from './supabase'
+import { supabase, initSupabase } from './supabase'
 import type { UserRow } from './types'
 
 type AuthState = {
@@ -47,13 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    loadUser()
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    initSupabase().then(() => {
       loadUser()
+      supabase.auth.onAuthStateChange(() => loadUser())
     })
-    return () => subscription.unsubscribe()
   }, [loadUser])
 
   const signOut = useCallback(async () => {
