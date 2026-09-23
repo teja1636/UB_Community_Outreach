@@ -10,8 +10,8 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key',
     {
       cookies: {
         getAll() {
@@ -29,9 +29,14 @@ export async function middleware(request: NextRequest) {
   )
 
   // IMPORTANT: getUser() refreshes the session cookie. Do not remove.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Wrapped in try-catch so a Supabase network error doesn't crash every page.
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    // Treat as unauthenticated; the page will redirect to /welcome.
+  }
 
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
